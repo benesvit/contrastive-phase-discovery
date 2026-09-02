@@ -217,31 +217,6 @@ epsilons are the main knob if your clusters come out over- or under-merged.
 
 ---
 
-## Known issues / notes
-
-1. **`metric_learning/dataset.py`** calls `rotate(...)` when `rotate=True`
-   without importing it — it needs `from common.data import rotate`. The
-   notebooks do not enable rotation, so this is currently latent.
-2. **`contrastive_learning/losses.py` is a byte-identical copy** of
-   `metric_learning/losses.py`, and the Siamese notebook does not use it (it uses
-   `contrastive_loss` defined in `contrastive_learning/model.py`). It can
-   probably be deleted.
-3. **`wms_loss(..., sumfunction='plain')`** references `pos_exp` / `neg_exp`
-   before assignment — only the default `'ms'` branch works.
-4. **`DataWithLabels._update_with_new`** writes `self.augument` instead of
-   `self.augumented`, so the augmentation flag array is not actually extended.
-   (`augument`/`augument_randomly` are also spelled with an extra *u*
-   throughout — rename to `augment` if touching this.)
-5. **Checkpoint directories are inconsistent**: the Siamese notebook saves into
-   `results/`, the metric-learning notebook into `models/`. Both are gitignored.
-6. **`X` in `optimized_configs.npz` is not a descriptor matrix** — it is an
-   `int64` array of shape `(20000,)`. Harmless in practice (neither notebook
-   reads `data_grad.x`), but the field is meaningless for that bundle.
-7. Every plotting helper except `plot_loss_curves` is currently unused by the
-   committed notebooks.
-
----
-
 ## Citation
 
 ```bibtex
