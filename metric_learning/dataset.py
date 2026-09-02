@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import Dataset, random_split, DataLoader
 import numpy as np
+from common.data import rotate
 
 class MetricLearningDataset(Dataset):
 
