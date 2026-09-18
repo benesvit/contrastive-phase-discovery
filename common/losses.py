@@ -9,7 +9,7 @@ def continuous_contrastive_loss(similarity,
                                 da = 10,
                                 db = 0.5,
                                 embedding_distance='euclidean',
-                                eps=0.01,):
+                                ):
     """
     Contrastive loss with soft positive/negative weights.
 

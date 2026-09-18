@@ -133,7 +133,6 @@ class DataWithLabels():
             self.augument = np.concatenate([self.augumented,
                                             np.array([True]*len(new_confs))])
 
-    # This augument randomly function seems to be not great
     def augument_randomly(self, ratio : float = 0.5, repetition : bool = False):
         """
         Append randomly rotated copies of a random subset of the configurations.
