@@ -52,14 +52,13 @@ listed in [.gitignore](.gitignore) — the repository holds code only.
 
 ## Data availability
 
-The two input bundles are **not tracked in this repository**. To run the notebooks you need:
+To run the notebooks you need the monte carlo configurations which are available from Zenodo [10.5281/zenodo.19681601](https://doi.org/10.5281/zenodo.19681601):
 
 | File | Contents |
 |---|---|
 | `data/monte_carlo_configs.npz` | 6 000 Monte-Carlo configurations with energies, $(\alpha, \kappa)$ values and precalculated descriptors |
-| `data/optimized_configs.npz` | 20 000 gradient-optimized configurations |
 
-Place both under `data/` and the notebooks run as-is. **The descriptors and
+Place under `data/` and the notebooks run as-is. **The descriptors and
 reference labels are already stored in the bundles**, so no preprocessing step is
 needed to reproduce the results.
 

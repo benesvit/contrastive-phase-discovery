@@ -3,6 +3,7 @@ from pathlib import Path
 from umap import UMAP
 from hdbscan import HDBSCAN
 from sklearn.metrics import adjusted_rand_score
+from tqdm import tqdm
 
 def get_total_order(P: np.ndarray) -> float:
     """
@@ -403,24 +404,30 @@ def get_cross_coherence_parameters_rot(P: np.ndarray, A: np.ndarray) -> list:
     c_22 = get_cross_coherence_rot(P, A, Q=Q22)
     return [c_00, c_01, c_11, c_02, c_22]
 
+def calculate_descriptor_vector(config):
+        p = config[..., :2]
+        a = config[..., 2:]
+        p_S = get_order_parameters_rot(p)
+        a_S = get_order_parameters_rot(a)
+        cross_c = get_cross_coherence_parameters_rot(p, a)
+        return np.concatenate([p_S, a_S, cross_c])
+
+def calculate_descriptor_for_all(configurations):
+    X = []
+    for config in tqdm(configurations):
+        x = calculate_descriptor_vector(config)
+        X.append(x)
+    return np.array(X)
+
 # Example usage
 if __name__ == '__main__':
     data_pth = Path('data')
     data = np.load(data_pth / 'monte_carlo_configs.npz')
 
-    V = data['Configurations']
-
-    X = []
-    for i, v in enumerate(V):
-        p = v[..., :2]
-        a = v[..., 2:]
-        p_S = get_order_parameters_rot(p)
-        a_S = get_order_parameters_rot(a)
-        cross_c = get_cross_coherence_parameters_rot(p, a)
-        X.append(np.concatenate([p_S, a_S, cross_c]))
+    configs = data['Configurations']
+    X = calculate_descriptor_for_all(configs)
 
     # Check that the saved descriptor values match
-    X = np.array(X)
     assert np.allclose(X, data['X'])
 
     # The clustering can be performed as:
