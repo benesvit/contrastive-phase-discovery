@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import Dataset, random_split, DataLoader
 import numpy as np
+from common.data import rotate
 
 class BalancedContrastiveDataset(Dataset):
     """
@@ -51,10 +52,10 @@ class BalancedContrastiveDataset(Dataset):
         
         contrast = self.configurations[contrast_idx]
         # Randomly rotate contrast whatever it might be
-        # if self._rotate:
-        #     angle = self._rng.choice([0, 90, 180, 270], p=self._rotate_p)
-        #     if angle != 0:
-        #         contrast = rotate(contrast, angle)
+        if self._rotate:
+            angle = self._rng.choice([0, 90, 180, 270], p=self._rotate_p)
+            if angle != 0:
+                contrast = rotate(contrast, angle)
         
         return (
             torch.FloatTensor(anchor).permute(2, 0, 1),     # (4, 8, 8)
@@ -63,7 +64,9 @@ class BalancedContrastiveDataset(Dataset):
         )
     
     def _sample_negative(self, anchor_idx, anchor_label):
-        """Sample a negative example (different class)"""
+        """
+        Sample an index from a different cluster.
+        """
         # Get all indices with different labels
         negative_mask = (self.labels != anchor_label) & (self.labels != -1)
         negative_indices = np.where(negative_mask)[0]
@@ -78,12 +81,12 @@ class BalancedContrastiveDataset(Dataset):
 
 def make_balanced_train_test_dataset(configurations, labels, batch_size=32, train_ratio=0.8, positive_ratio=0.5):
     """
-    Create balanced train/test datasets with controlled positive/negative ratio.
-    
-    Parameters:
-    -----------
+    Split the pair dataset into train and test loaders.
+
+    Parameters
+    ----------
     positive_ratio : float
-        Fraction of pairs that should be positive (same class)
+        Fraction of pairs drawn from the same cluster.
     """
     dataset = BalancedContrastiveDataset(configurations, labels, positive_ratio=positive_ratio)
     train_size = int(train_ratio * len(dataset))

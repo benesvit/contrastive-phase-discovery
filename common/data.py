@@ -3,6 +3,11 @@ import matplotlib.pyplot as plt
 
 
 class DataWithLabels():
+    """
+    Configurations with everything stored alongside them: the model parameters
+    they were generated at (values), descriptor vectors (x), energies and cluster
+    labels, where -1 marks HDBSCAN noise.
+    """
     def __init__(self, configurations, values, x, energies, labels):
         self.configurations = configurations
         self.values = values
@@ -131,7 +136,7 @@ class DataWithLabels():
     # This augument randomly function seems to be not great
     def augument_randomly(self, ratio : float = 0.5, repetition : bool = False):
         """
-        Apply random rotation to random (uniformly selected) config, this increases dataset size.
+        Append randomly rotated copies of a random subset of the configurations.
         """
         rng = np.random.default_rng()
         n_all = len(self.configurations)
@@ -154,6 +159,22 @@ class DataWithLabels():
 
 
 def rotate(field, degrees=90):
+    """
+    Rotate a configuration by a multiple of 90 degrees.
+
+    Both the lattice and the vector components are rotated, since the fields
+    transform with the lattice.
+
+    Parameters
+    ----------
+    field : ndarray, shape (M, N, 4)
+        Configuration with [...,:2] = P and [...,2:] = A.
+    degrees : {90, 180, 270}
+
+    Returns
+    -------
+    ndarray, shape (M, N, 4)
+    """
     rotations = {
         90:  np.array([[0, -1], [1, 0]]),
         180: np.array([[-1, 0], [0, -1]]),

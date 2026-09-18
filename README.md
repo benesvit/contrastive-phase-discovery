@@ -1,6 +1,6 @@
 # Contrastive Phase Discovery
 
-Companion code for the article **_[TODO: article title]_** ([TODO: journal / arXiv link]).
+Companion code for the article **_Soft Contrastive Learning for Unsupervised Discovery of Phases of Matter_** (in preparation).
 
 We learn low-dimensional embeddings of lattice configurations of a two-field
 (polarization **P** + "hidden" field **A**) PbZrO3 (PZO) model with a
@@ -61,8 +61,6 @@ To run the notebooks you need the monte carlo configurations which are available
 Place under `data/` and the notebooks run as-is. **The descriptors and
 reference labels are already stored in the bundles**, so no preprocessing step is
 needed to reproduce the results.
-
-[TODO: Zenodo DOI / where to obtain the bundles.]
 
 ### Bundle format
 
@@ -219,15 +217,15 @@ epsilons are the main knob if your clusters come out over- or under-merged.
 ## Citation
 
 ```bibtex
-@article{[TODO:key],
-  title   = {[TODO: title]},
-  author  = {Bene\v{s}, V\'it and [TODO: co-authors]},
-  journal = {[TODO]},
-  year    = {[TODO]},
-  doi     = {[TODO]}
+@article{benes_soft_contrastive,
+  title   = {Soft Contrastive Learning for Unsupervised Discovery of Phases of Matter},
+  author  = {Bene\v{s}, V\'it and Bal\'a\v{z}, Pavel and Bohdanov, Dmytro and Hlinka, Ji\v{r}\'i},
+  journal = {},
+  year    = {},
+  doi     = {}
 }
 ```
 
 ## License
 
-[TODO: choose a license — e.g. MIT for code, CC-BY for data.]
+MIT — see [LICENSE](LICENSE). The Monte-Carlo data is distributed separately via Zenodo under its own terms.

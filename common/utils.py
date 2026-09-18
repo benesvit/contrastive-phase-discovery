@@ -258,7 +258,9 @@ def compare_clusterings(values, labels1, labels2):
     plt.show()
 
 class InteractivePhaseDiagram:
-    """Interactive phase diagram - click any point to view its configuration."""
+    """
+    Interactive phase diagram - click any point to view its configuration.
+    """
     
     def __init__(self, data: DataWithLabels, samples_per_cluster=10000, seed=42):
         self.data = data

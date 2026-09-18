@@ -14,7 +14,7 @@ def get_total_order(P: np.ndarray) -> float:
 
 def get_structure_factor(P: np.ndarray, Q: np.ndarray = np.array([np.pi, np.pi]), normalize: bool = True) -> np.ndarray:
     """
-    Vector structure factor S(Q) for a 2D polarization field.
+    Vector structure factor S(Q) for a 2D field P (polarization/hidden field).
 
     Parameters
     ----------
@@ -185,7 +185,7 @@ rot90 = np.array([
 )
 def get_order_parameter_rot(P: np.ndarray, Q: np.ndarray, normalize: bool = True) -> float:
     """
-    Root-sum-of-squares order parameter using the four sign variants (±Qx, ±Qy).
+    Root-sum-of-squares order parameter accumulated over the four C4 rotations of Q.
 
     Parameters
     ----------
@@ -199,7 +199,7 @@ def get_order_parameter_rot(P: np.ndarray, Q: np.ndarray, normalize: bool = True
     Returns
     -------
     float
-        sqrt( sum_{sx=±1, sy=±1} |S(P; sx*Qx, sy*Qy)|^2 ),
+        sqrt( sum_k |S(P; R_k Q)|^2 ) over the four rotations R_k of Q,
         where S is the complex 2D structure factor of (u,v).
     """
     
@@ -227,7 +227,7 @@ def get_order_parameter_rot(P: np.ndarray, Q: np.ndarray, normalize: bool = True
 
 def get_cross_coherence_rot(P, A, Q, aggregate="power_weighted", normalize=True, eps=1e-12):
     """
-    Cross-coherence between P and A at the four sign variants (±Qx, ±Qy).
+    Cross-coherence between P and A accumulated over the four C4 rotations of Q.
 
     Parameters
     ----------
@@ -245,7 +245,7 @@ def get_cross_coherence_rot(P, A, Q, aggregate="power_weighted", normalize=True,
     Returns
     -------
     float
-        Cross-coherence in [0,1], aggregated over (±Qx, ±Qy).
+        Cross-coherence in [0,1], aggregated over the four rotations of Q.
     """
     
     P = np.asarray(P); A = np.asarray(A)
@@ -314,15 +314,17 @@ Q22 = np.array([np.pi / 2, np.pi / 2])
 
 def get_order_parameters(V: np.ndarray) -> list:
     """
-    Calculate ordering parameters for a 2D polarization field from the structure factor S(Q).
-    
-    Parameters:
-    V : np.ndarray
-        Polarization field in pseudo-cubic coordinates.
-        
-    Returns:
-    list
-        Array of ordering parameters.
+    Order parameters of a 2D field over the full seven-Q set.
+
+    Parameters
+    ----------
+    V : ndarray, shape (Nx, Ny, 2)
+        Field in pseudo-cubic coordinates.
+
+    Returns
+    -------
+    list of float
+        Seven values: the total order followed by Q01, Q10, Q11, Q02, Q20, Q22.
     """
        
     v_tot = get_total_order(V)
@@ -337,19 +339,19 @@ def get_order_parameters(V: np.ndarray) -> list:
 
 def get_cross_coherence_parameters(P: np.ndarray, A: np.ndarray) -> list:
     """
-    Calculate the cross-coherence between polarization and antiferroelectric order parameters.
-    
-    Parameters:
-    P : np.ndarray
+    Cross-coherence between P and A over the full seven-Q set.
+
+    Parameters
+    ----------
+    P : ndarray, shape (Nx, Ny, 2)
         Polarization field in pseudo-cubic coordinates.
-    A : np.ndarray
-        Antiferroelectric order parameter field in pseudo-cubic coordinates.
-    Q : tuple
-        Q vector for the cross-coherence calculation.
-        
-    Returns:
-    float
-        Cross-coherence value.
+    A : ndarray, shape (Nx, Ny, 2)
+        Hidden field in pseudo-cubic coordinates.
+
+    Returns
+    -------
+    list of float
+        Seven values at Q00, Q01, Q10, Q11, Q02, Q20, Q22.
     """
     c_00 = get_cross_coherence(P, A, Q=Q00)
     c_01 = get_cross_coherence(P, A, Q=Q01)
@@ -363,15 +365,17 @@ def get_cross_coherence_parameters(P: np.ndarray, A: np.ndarray) -> list:
 
 def get_order_parameters_rot(V: np.ndarray)->list:
     """
-    Calculate ordering parameters for a 2D polarization field from the structure factor S(Q) using rotationally invariant version.
-    
-    Parameters:
-    V : np.ndarray
-        Polarization field in pseudo-cubic coordinates.
-        
-    Returns:
-    list
-        Array of ordering parameters.
+    Rotationally invariant order parameters of a 2D field.
+
+    Parameters
+    ----------
+    V : ndarray, shape (Nx, Ny, 2)
+        Field in pseudo-cubic coordinates.
+
+    Returns
+    -------
+    list of float
+        Five values: the total order followed by Q01, Q11, Q02, Q22.
     """
        
     v_tot = get_total_order(V)
@@ -383,19 +387,19 @@ def get_order_parameters_rot(V: np.ndarray)->list:
 
 def get_cross_coherence_parameters_rot(P: np.ndarray, A: np.ndarray) -> list:
     """
-    Calculate the cross-coherence between polarization and antiferroelectric order parameters using rotationally invariant version.
-    
-    Parameters:
-    P : np.ndarray
+    Rotationally invariant cross-coherence between P and A.
+
+    Parameters
+    ----------
+    P : ndarray, shape (Nx, Ny, 2)
         Polarization field in pseudo-cubic coordinates.
-    A : np.ndarray
-        Antiferroelectric order parameter field in pseudo-cubic coordinates.
-    Q : tuple
-        Q vector for the cross-coherence calculation.
-        
-    Returns:
-    float
-        Cross-coherence value.
+    A : ndarray, shape (Nx, Ny, 2)
+        Hidden field in pseudo-cubic coordinates.
+
+    Returns
+    -------
+    list of float
+        Five values at Q00, Q01, Q11, Q02, Q22.
     """
     c_00 = get_cross_coherence_rot(P, A, Q=Q00)
     c_01 = get_cross_coherence_rot(P, A, Q=Q01)
@@ -405,6 +409,15 @@ def get_cross_coherence_parameters_rot(P: np.ndarray, A: np.ndarray) -> list:
     return [c_00, c_01, c_11, c_02, c_22]
 
 def calculate_descriptor_vector(config):
+        """
+        Descriptor vector of one configuration.
+
+        Returns
+        -------
+        ndarray, shape (15,)
+            Five rotationally invariant order parameters of P, five of A, and five
+            P-A cross-coherences.
+        """
         p = config[..., :2]
         a = config[..., 2:]
         p_S = get_order_parameters_rot(p)

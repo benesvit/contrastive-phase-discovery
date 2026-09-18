@@ -66,8 +66,7 @@ class TrainConfig:
 
 def contrastive_loss(embedding_a, embedding_b, label, margin=1.0):
     """
-    Contrastive loss function.
-    label: 1 if same class, 0 if different class
+    Margin contrastive loss; label is 1 for a same-cluster pair, 0 otherwise.
     """
     
     label = label.float().view(-1)  # important to ensure label is float tensor
@@ -89,7 +88,7 @@ def train_step(config: TrainConfig, anchor_batch, contrast_batch, labels, margin
     anchor_batch = anchor_batch.to(config.device)
     contrast_batch = contrast_batch.to(config.device)
 
-    # (voliteľné) skip batch size 1 kvôli BN
+    # (optional) skip batch size 1 for BN
     if anchor_batch.size(0) < 2:
         return 0.0
 
@@ -121,11 +120,6 @@ def train_model(config: TrainConfig, num_epochs=100, steps_per_epoch=100, margin
         for batch in config.train_loader:
             # Get batch from your iterator
             anchor_configs, contrast_configs, y_labels = batch
-            
-            # Prepare data
-            # anchor_configs = Configurations[list(anchor_indices)]
-            # contrast_configs = Configurations[list(contrast_indices)]
-            # y_labels = np.array(labels, dtype=np.float32)
             
             # Train step
             loss = train_step(config, anchor_configs, contrast_configs, y_labels, margin=margin)

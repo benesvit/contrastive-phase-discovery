@@ -10,7 +10,33 @@ def continuous_contrastive_loss(similarity,
                                 db = 0.5,
                                 embedding_distance='euclidean',
                                 eps=0.01,):
-    
+    """
+    Contrastive loss with soft positive/negative weights.
+
+    Instead of a binary same/different label, every pair carries a continuous
+    similarity that is passed through a gate to give its positive and negative
+    weight, so a pair contributes to both terms.
+
+    Parameters
+    ----------
+    similarity : tensor, shape (B, B)
+        Pairwise target similarity in [0,1], as returned by Q_distance.
+    embeddings : tensor, shape (B, D)
+        Embeddings of the same batch.
+    mu : float
+        Margin of the negative term.
+    scale : {'sigmoid', 'lin', 'tanh'}
+        Gate turning the similarity into the positive/negative weights.
+    da, db : float
+        Steepness and midpoint of the sigmoid and tanh gates.
+    embedding_distance : {'euclidean', 'cosine'}
+        Distance used between embeddings.
+
+    Returns
+    -------
+    tensor
+        Scalar loss, averaged over the strict upper triangle.
+    """
     if embedding_distance == 'euclidean':
         emb_dist = torch.cdist(embeddings, embeddings)
     elif embedding_distance == 'cosine':
@@ -43,6 +69,21 @@ def continuous_contrastive_loss(similarity,
 
 
 def Q_distance(Q,  c_max = 1.0, c_min = -1.0):
+    """
+    Pairwise cosine similarity of descriptor vectors, rescaled to [0,1].
+
+    Parameters
+    ----------
+    Q : tensor, shape (B, F)
+        Descriptor vectors; rows are L2-normalized before the product.
+    c_max, c_min : float
+        Cosine range mapped onto [0,1].
+
+    Returns
+    -------
+    tensor, shape (B, B)
+        Similarity target of continuous_contrastive_loss.
+    """
     Q = F.normalize(Q, p=2, dim=1)
     cos_sim = torch.matmul(Q, Q.T)
     

@@ -31,12 +31,14 @@ class MetricLearningDataset(Dataset):
 
 def make_balanced_train_test_dataset(configurations, order_params, batch_size=32, train_ratio=0.8, rotate=False, rotate_p=None):
     """
-    Create balanced train/test datasets with controlled positive/negative ratio.
-    
-    Parameters:
-    -----------
-    positive_ratio : float
-        Fraction of pairs that should be positive (same class)
+    Split configurations and their descriptor vectors into train and test loaders.
+
+    Parameters
+    ----------
+    rotate : bool
+        Apply a random C4 rotation to each configuration on access.
+    rotate_p : array_like, optional
+        Probabilities of the four rotations.
     """
     dataset = MetricLearningDataset(configurations, order_params, rotate, rotate_p)
     train_size = int(train_ratio * len(dataset))
