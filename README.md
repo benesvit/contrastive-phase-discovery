@@ -13,12 +13,6 @@ parameters. Two training strategies are compared:
 | [siamese_network.ipynb](siamese_network.ipynb) | **Discrete contrastive** (Siamese network) | Binary same/different-cluster pairs from a reference HDBSCAN labelling |
 | [metric_learning.ipynb](metric_learning.ipynb) | **Continuous metric learning** | Cosine similarity between descriptor vectors — no discrete labels |
 
-The point of the comparison: the metric-learning route never sees discrete phase
-labels, so its clusters are not inherited from the reference clustering it is
-compared against. Both notebooks then apply the trained encoder to a second,
-independent set of gradient-optimized configurations to check that the learned
-embedding transfers.
-
 ---
 
 ## Repository layout
@@ -56,10 +50,10 @@ To run the notebooks you need the monte carlo configurations which are available
 
 | File | Contents |
 |---|---|
-| `data/monte_carlo_configs.npz` | 6 000 Monte-Carlo configurations with energies, $(\alpha, \kappa)$ values and precalculated descriptors |
+| `data/monte_carlo_configurations.npz` | 6 000 Monte-Carlo configurations with $(\alpha, \kappa)$ values and precalculated descriptors |
+| `data/optimized_configurations.npz` | 20 000 Configurations obtained by gradient descent with $(\alpha, \kappa)$ values and precalculated descriptors |
 
-Place under `data/` and the notebooks run as-is. **The descriptors and
-reference labels are already stored in the bundles**, so no preprocessing step is
+Place under `data/` and the notebooks run as-is. **The descriptors are already stored in the bundles**, so no preprocessing step is
 needed to reproduce the results.
 
 ### Bundle format
@@ -72,8 +66,6 @@ Every bundle is an `.npz` written by `DataWithLabels.to_npz()` and read back by
 | `Configurations` | `(N, 8, 8, 4)` | Lattice configuration. Last axis is `[P1, P2, A1, A2]` — the two polarization and two hidden-field components. |
 | `Values` | `(N, 2)` | Model parameters $(\alpha, \kappa)$ of the run: the axes of the phase diagram. |
 | `X` | `(N, 15)` | Descriptor vector: 5 **P** order parameters, 5 **A** order parameters, 5 **P**–**A** cross-coherences (see below). Used as the *similarity target* in metric learning. |
-| `Energies` | `(N,)` | Energy per lattice site. |
-| `Labels` | `(N,)` | Reference cluster id; `-1` = HDBSCAN noise. |
 
 Channel convention: the encoders take `(N, 4, 8, 8)` (channels-first), so the
 datasets `permute(2, 0, 1)` on the fly. The first convolution uses
@@ -85,8 +77,7 @@ lattice.
 ## Descriptors
 
 [descriptors.py](descriptors.py) defines the hand-crafted descriptors stored in
-`X` and documents how the reference labelling was obtained. The notebooks do not
-import it — it is there so the stored values can be checked and regenerated.
+`X` and documents how the reference labelling was obtained.
 
 - `get_structure_factor(P, Q)` — complex vector structure factor $S(Q)$;
   `get_total_order(P)` — norm of the mean field.
@@ -100,7 +91,7 @@ import it — it is there so the stored values can be checked and regenerated.
   $Q \in \{(0,0), (0,\pi), (\pi,\pi), (0,\pi/2), (\pi/2,\pi/2)\}$. The non-`rot`
   variants give 7-feature blocks over the full seven-$Q$ set.
 
-Run as a script, it recomputes the descriptors for `data/monte_carlo_configs.npz`,
+Run as a script, it recomputes the descriptors for MC configurations,
 asserts they match the stored `X`, then reproduces the reference clustering —
 UMAP (`n_neighbors=30`, `min_dist=0.1`, cosine, `random_state=42`) followed by
 HDBSCAN (`min_cluster_size=20`, `cluster_selection_epsilon=2.0`) — and prints the
@@ -228,4 +219,4 @@ epsilons are the main knob if your clusters come out over- or under-merged.
 
 ## License
 
-MIT — see [LICENSE](LICENSE). The Monte-Carlo data is distributed separately via Zenodo under its own terms.
+MIT — see [LICENSE](LICENSE). The data is distributed separately via Zenodo under its own terms.
