@@ -27,7 +27,7 @@ parameters. Two training strategies are compared:
 ├── common/                    #   Shared code
 │   ├── data.py                #   DataWithLabels
 │   ├── utils.py               #   loss curves, embedding plots, interactive phase diagram
-│   └── losses.py              #   continuous_contrastive_loss, wms_loss, Q_distance]
+│   └── losses.py              #   continuous_contrastive_loss, wms_loss, Q_distance
 │
 ├── contrastive_learning/      #   Siamese / discrete-label method
 │   ├── model.py               #   SiameseEncoder, SiameseNetwork, contrastive_loss, train loop
