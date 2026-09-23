@@ -7,52 +7,66 @@ class DataWithLabels():
     Configurations with everything stored alongside them: the model parameters
     they were generated at (values), descriptor vectors (x), energies and cluster
     labels, where -1 marks HDBSCAN noise.
+
+    x, energies and labels are optional and are None when not available.
     """
-    def __init__(self, configurations, values, x, energies, labels):
+    OPTIONAL_KEYS = {'x': 'X', 'energies': 'Energies', 'labels': 'Labels'}
+
+    def __init__(self, configurations, values, x=None, energies=None, labels=None):
         self.configurations = configurations
         self.values = values
         self.x = x
         self.energies = energies
         self.labels = labels
         self.augumented = np.array([False]*len(configurations))
-    
+        self._check_lengths()
+
+    def _check_lengths(self):
+        n = len(self.configurations)
+        for attr in ['values', *self.OPTIONAL_KEYS]:
+            arr = getattr(self, attr)
+            if arr is not None and len(arr) != n:
+                raise ValueError(f"'{attr}' has length {len(arr)}, "
+                                 f"expected {n} (number of configurations)")
+
+    def _require(self, attr):
+        if getattr(self, attr) is None:
+            raise ValueError(f"'{attr}' is not available in this dataset")
+
     @classmethod
     def from_npz(cls, data_path):
         loaded = np.load(data_path)
-        return cls(
-                    loaded['Configurations'],
-                    loaded['Values'],
-                    loaded['X'],
-                    loaded['Energies'],
-                    loaded['Labels'],
-                    )
+        optional = {attr: loaded[key] if key in loaded.files else None
+                    for attr, key in cls.OPTIONAL_KEYS.items()}
+        return cls(loaded['Configurations'], loaded['Values'], **optional)
 
     def to_npz(self, data_path):
+        optional = {key: getattr(self, attr)
+                    for attr, key in self.OPTIONAL_KEYS.items()
+                    if getattr(self, attr) is not None}
         np.savez(
             data_path,
             Configurations=self.configurations,
             Values=self.values,
-            X=self.x,
-            Energies=self.energies,
-            Labels=self.labels
+            **optional
         )
 
-    
+    def _subset(self, idx):
+        """Index every stored array, keeping missing ones as None."""
+        return {attr: None if getattr(self, attr) is None else getattr(self, attr)[idx]
+                for attr in ['configurations', 'values', *self.OPTIONAL_KEYS]}
+
     def filter_label(self, label):
-        mask = self.labels == label
-        return DataWithLabels(
-            self.configurations[mask],
-            self.values[mask],
-            self.x[mask],
-            self.energies[mask],
-            self.labels[mask]
-        )
+        self._require('labels')
+        return DataWithLabels(**self._subset(self.labels == label))
+
     def __getitem__(self, idx):
-        return dict(Configuration=self.configurations[idx],
-                    Value=self.values[idx],
-                    X=self.x[idx],
-                    Energy=self.energies[idx],
-                    Label=self.labels[idx])
+        s = self._subset(idx)
+        return dict(Configuration=s['configurations'],
+                    Value=s['values'],
+                    X=s['x'],
+                    Energy=s['energies'],
+                    Label=s['labels'])
     
     def plot(self, idx, scale_eps = 1, vert: bool = False, figname: str = None, fig_kw: dict = {} ):
         P = self.configurations[idx][:, :,  :2]
@@ -120,15 +134,18 @@ class DataWithLabels():
 
     def _update_with_new(self, new_confs,
                     new_values,
-                    new_xs,
-                    new_energies,
-                    new_labels,
+                    new_xs=None,
+                    new_energies=None,
+                    new_labels=None,
                     augumented=True):
         self.configurations = np.concatenate([self.configurations, new_confs])
         self.values = np.concatenate([self.values, new_values],axis=0)
-        self.x = np.concatenate([self.x, new_xs],axis=0)
-        self.energies = np.concatenate([self.energies, new_energies],axis=0)
-        self.labels = np.concatenate([self.labels, new_labels],axis=0)
+        for attr, new in [('x', new_xs), ('energies', new_energies), ('labels', new_labels)]:
+            old = getattr(self, attr)
+            if (old is None) != (new is None):
+                raise ValueError(f"'{attr}' is present in only one of the datasets")
+            if old is not None:
+                setattr(self, attr, np.concatenate([old, new], axis=0))
         if augumented:
             self.augument = np.concatenate([self.augumented,
                                             np.array([True]*len(new_confs))])
@@ -146,15 +163,12 @@ class DataWithLabels():
             
         # rotate randomly chosen configurations
         new_confs = np.array([rotate(conf, dg) for (conf,dg) in zip(self.configurations[idxs], angles)])
-        new_values = self.values[idxs]
-        new_xs = self.x[idxs]
-        new_energies = self.energies[idxs]
-        new_labels = self.labels[idxs]
+        subset = self._subset(idxs)
         self._update_with_new(new_confs=new_confs,
-                              new_values=new_values,
-                              new_xs=new_xs,
-                              new_energies=new_energies,
-                              new_labels=new_labels)
+                              new_values=subset['values'],
+                              new_xs=subset['x'],
+                              new_energies=subset['energies'],
+                              new_labels=subset['labels'])
 
 
 def rotate(field, degrees=90):
