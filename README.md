@@ -11,7 +11,7 @@ parameters. Two training strategies are compared:
 | Notebook | Strategy | Supervision signal |
 |---|---|---|
 | [siamese_network.ipynb](siamese_network.ipynb) | **Discrete contrastive** (Siamese network) | Binary same/different-cluster pairs from a reference HDBSCAN labelling |
-| [metric_learning.ipynb](metric_learning.ipynb) | **Continuous metric learning** | Cosine similarity between descriptor vectors — no discrete labels |
+| [metric_learning.ipynb](metric_learning.ipynb) | **Continuous metric learning** | Cosine similarity between descriptor vectors and no discrete labels |
 
 ---
 
@@ -26,21 +26,17 @@ parameters. Two training strategies are compared:
 │
 ├── common/                    #   Shared code
 │   ├── data.py                #   DataWithLabels
-│   └── utils.py               #   loss curves, embedding plots, interactive phase diagram
+│   ├── utils.py               #   loss curves, embedding plots, interactive phase diagram
+│   └── losses.py              #   continuous_contrastive_loss, wms_loss, Q_distance]
 │
 ├── contrastive_learning/      #   Siamese / discrete-label method
 │   ├── model.py               #   SiameseEncoder, SiameseNetwork, contrastive_loss, train loop
-│   ├── dataset.py             #   BalancedContrastiveDataset (balanced positive/negative pairs)
-│   └── losses.py              #   (identical copy of metric_learning/losses.py — see Known issues)
+│   └── dataset.py             #   BalancedContrastiveDataset (balanced positive/negative pairs)
 │
 └── metric_learning/           #   Continuous-similarity method
     ├── model.py               #   Embedder, train/test steps, train loop, get_embeddings
-    ├── dataset.py             #   MetricLearningDataset (config + descriptor vector)
-    └── losses.py              #   continuous_contrastive_loss, wms_loss, Q_distance
+    └── dataset.py             #   MetricLearningDataset (config + descriptor vector)
 ```
-
-`data/`, `models/`, `results/`, `data_pzo_8x8_sim_anneal/` and `__pycache__/` are
-listed in [.gitignore](.gitignore) — the repository holds code only.
 
 ---
 
@@ -53,13 +49,12 @@ To run the notebooks you need the monte carlo configurations which are available
 | `data/monte_carlo_configurations.npz` | 6 000 Monte-Carlo configurations with $(\alpha, \kappa)$ values and precalculated descriptors |
 | `data/optimized_configurations.npz` | 20 000 Configurations obtained by gradient descent with $(\alpha, \kappa)$ values and precalculated descriptors |
 
-Place under `data/` and the notebooks run as-is. **The descriptors are already stored in the bundles**, so no preprocessing step is
-needed to reproduce the results.
+Place under `data/` and the notebooks run as-is. **The descriptors are already stored in the bundles**, so no preprocessing step is needed to reproduce the results.
 
-### Bundle format
+### Data format
 
-Every bundle is an `.npz` written by `DataWithLabels.to_npz()` and read back by
-`DataWithLabels.from_npz()`, with five arrays:
+Every data archive is an `.npz` written by `DataWithLabels.to_npz()` and read back by
+`DataWithLabels.from_npz()`, with three arrays:
 
 | Key | Shape | Meaning |
 |---|---|---|
@@ -114,19 +109,13 @@ pip install -r requirements.txt
 ```
 
 [requirements.txt](requirements.txt) pins the exact versions the article results
-were produced with. `numpy` is held below 2.0 because `hdbscan` and `umap-learn`
-are built against the 1.x ABI, and the pinned `torch` is a CPU build — the models
-are small (~100 kB checkpoints) and train on CPU in minutes.
+were produced with.
 
 ---
 
 ## Running the notebooks
 
-Run either notebook top to bottom from the repository root (imports are
-`common.*` / `metric_learning.*`, so the working directory matters).
-
-Both notebooks have a `train` / `save_model` switch in the training cell: set
-`train = False` to skip training and load the existing checkpoint instead.
+Run either notebook top to bottom from the repository root. Both notebooks have a `train` / `save_model` switch in the training cell: set `train = False` to skip training and load the existing checkpoint instead.
 
 | | `siamese_network.ipynb` | `metric_learning.ipynb` |
 |---|---|---|
@@ -137,7 +126,7 @@ Both notebooks have a `train` / `save_model` switch in the training cell: set
 | Batch / epochs | 64 / 100 | 128 / 200 |
 | Optimizer | AdamW, lr 3e-4, wd 1e-4 | AdamW, lr 3e-4, wd 1e-4 |
 | Schedule | 5 % linear warm-up → cosine anneal | 5 % linear warm-up → cosine anneal |
-| Checkpoint | `results/siamese_encoder.pt` | `models/embedder.pt` |
+| Checkpoint | `models/siamese_encoder.pt` | `models/embedder.pt` |
 
 Checkpoints store `{'model_state_dict', 'embedding_size'}`.
 
