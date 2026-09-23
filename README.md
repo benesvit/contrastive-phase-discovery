@@ -175,10 +175,7 @@ epsilons are the main knob if your clusters come out over- or under-merged.
     configurations" target.
   - `continuous_contrastive_loss(similarity, embeddings, ...)` — contrastive loss
     with *soft* positive/negative weights obtained by passing the similarity
-    through a `sigmoid` / `lin` / `tanh` gate, optional multi-similarity mining,
-    averaged over the strict upper triangle. **This is the loss used in the article.**
-  - `wms_loss(...)` — weighted multi-similarity loss adapted from the
-    literature, kept for comparison.
+    through a `sigmoid` / `lin` / `tanh` gating function. **This is the loss used in the article.**
 - `dataset.py` — `MetricLearningDataset` (configuration + its descriptor vector,
   with optional random C4 rotation) and `make_balanced_train_test_dataset`
   (80/20 `random_split` + `DataLoader`s).
@@ -197,7 +194,7 @@ epsilons are the main knob if your clusters come out over- or under-merged.
 ## Citation
 
 ```bibtex
-@article{benes_soft_contrastive,
+@article{benes_balaz_soft_contrastive,
   title   = {Soft Contrastive Learning for Unsupervised Discovery of Phases of Matter},
   author  = {Bene\v{s}, V\'it and Bal\'a\v{z}, Pavel and Bohdanov, Dmytro and Hlinka, Ji\v{r}\'i},
   journal = {},
